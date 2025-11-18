@@ -9,7 +9,12 @@
 /* Mengatur font untuk seluruh dokumen */
 body {
     font-family: 'F77 Minecraft', sans-serif; /* Prioritaskan F77 Minecraft */
-    background-color: #f7f9fb;
+    background-color: #f7f9fb; /* Ini akan menjadi fallback jika gambar tidak dimuat */
+    background-image: url('assets/BACKGROUND DIRT.png'); /* Tambahkan gambar latar belakang */
+    background-size: cover; /* Menutupi seluruh area body */
+    background-attachment: fixed; /* Membuat latar belakang tetap saat di-scroll */
+    background-repeat: no-repeat; /* Mencegah pengulangan gambar */
+    background-position: center center; /* Memposisikan gambar di tengah */
 }
 h1, h2, p, label, button, select, div, a {
     font-family: 'F77 Minecraft', sans-serif;
