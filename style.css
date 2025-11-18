@@ -42,19 +42,19 @@ h1, h2, p, label, button, select, div, a {
 }
 
 /* Status default */
-#uploadButton { background-image: url('assets/UPLOAD BUTTON.PNG'); }
-#rescaleButton { background-image: url('assets/RESCALE BUTTON.PNG'); }
-#downloadLink { background-image: url('assets/DOWNLOAD BUTTON.PNG'); }
-#infoButton { background-image: url('assets/INFO BUTTON.PNG'); }
-#closeInfoButton { background-image: url('assets/CLOSE BUTTON.PNG'); }
+#uploadButton { background-image: url('assets/UPLOAD BUTTON.png'); }
+#rescaleButton { background-image: url('assets/RESCALE BUTTON.png'); }
+#downloadLink { background-image: url('assets/DOWNLOAD BUTTON.png'); }
+#infoButton { background-image: url('assets/INFO BUTTON.png'); }
+#closeInfoButton { background-image: url('assets/CLOSE BUTTON.png'); }
 
 
 /* Status hover/selected */
-#uploadButton:hover, #uploadButton.selected { background-image: url('assets/UPLOAD BUTTON SELECTED.PNG'); }
-#rescaleButton:hover, #rescaleButton.selected { background-image: url('assets/RESCALE BUTTON SELECTED.PNG'); }
-#downloadLink:hover, #downloadLink.selected { background-image: url('assets/DOWNLOAD BUTTON SELECTED.PNG'); }
-#infoButton:hover, #infoButton.selected { background-image: url('assets/INFO BUTTON SELECTED.PNG'); }
-#closeInfoButton:hover, #closeInfoButton.selected { background-image: url('assets/CLOSE BUTTON SELECTED.PNG'); }
+#uploadButton:hover, #uploadButton.selected { background-image: url('assets/UPLOAD BUTTON SELECTED.png'); }
+#rescaleButton:hover, #rescaleButton.selected { background-image: url('assets/RESCALE BUTTON SELECTED.png'); }
+#downloadLink:hover, #downloadLink.selected { background-image: url('assets/DOWNLOAD BUTTON SELECTED.png'); }
+#infoButton:hover, #infoButton.selected { background-image: url('assets/INFO BUTTON SELECTED.png'); }
+#closeInfoButton:hover, #closeInfoButton.selected { background-image: url('assets/CLOSE BUTTON SELECTED.png'); }
 
 
 /* Untuk tombol yang disabled */
@@ -104,4 +104,5 @@ h1, h2, p, label, button, select, div, a {
 }
 .modal-content ul li {
     margin-bottom: 8px;
+
 }
