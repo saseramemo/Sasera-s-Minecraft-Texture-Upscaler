@@ -1,0 +1,107 @@
+/* Font F77 Minecraft */
+@font-face {
+    font-family: 'F77 Minecraft';
+    src: url('assets/fonts/F77Minecraft.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Mengatur font untuk seluruh dokumen */
+body {
+    font-family: 'F77 Minecraft', sans-serif; /* Prioritaskan F77 Minecraft */
+    background-color: #f7f9fb;
+}
+h1, h2, p, label, button, select, div, a {
+    font-family: 'F77 Minecraft', sans-serif;
+}
+
+/* Style dasar untuk tombol gambar */
+.image-button {
+    /* Hapus width dan height fixed, gunakan rasio dan ukuran dari kelas Tailwind */
+    background-size: contain; /* Memastikan gambar tombol pas di dalam elemen */
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0; /* Sembunyikan teks asli jika ada, karena gambar sudah ada teksnya */
+    padding: 0;
+    transition: background-image 0.1s ease-in-out; /* Transisi untuk efek hover */
+    /* Tetapkan rasio aspek aset: 910 / 290 = ~3.137 */
+    aspect-ratio: 910 / 290;
+}
+
+/* Ukuran tombol di layar kecil */
+@media (max-width: 768px) {
+    .image-button {
+        width: 100%; /* Lebar penuh di layar kecil */
+        height: auto; /* Tinggi otomatis agar rasio terjaga */
+    }
+}
+
+/* Status default */
+#uploadButton { background-image: url('assets/UPLOAD BUTTON.PNG'); }
+#rescaleButton { background-image: url('assets/RESCALE BUTTON.PNG'); }
+#downloadLink { background-image: url('assets/DOWNLOAD BUTTON.PNG'); }
+#infoButton { background-image: url('assets/INFO BUTTON.PNG'); }
+#closeInfoButton { background-image: url('assets/CLOSE BUTTON.PNG'); }
+
+
+/* Status hover/selected */
+#uploadButton:hover, #uploadButton.selected { background-image: url('assets/UPLOAD BUTTON SELECTED.PNG'); }
+#rescaleButton:hover, #rescaleButton.selected { background-image: url('assets/RESCALE BUTTON SELECTED.PNG'); }
+#downloadLink:hover, #downloadLink.selected { background-image: url('assets/DOWNLOAD BUTTON SELECTED.PNG'); }
+#infoButton:hover, #infoButton.selected { background-image: url('assets/INFO BUTTON SELECTED.PNG'); }
+#closeInfoButton:hover, #closeInfoButton.selected { background-image: url('assets/CLOSE BUTTON SELECTED.PNG'); }
+
+
+/* Untuk tombol yang disabled */
+#rescaleButton:disabled {
+    opacity: 0.6; /* Sedikit transparan saat disabled */
+    cursor: not-allowed;
+}
+
+/* Style untuk modal overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background-color: #333; /* Darker background for Minecraft feel */
+    color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    border: 3px solid #666; /* Border like Minecraft UI */
+}
+.modal-content h3 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #aaffaa; /* Greenish title */
+    text-align: center;
+}
+.modal-content p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+.modal-content ul {
+    list-style-type: disc;
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+.modal-content ul li {
+    margin-bottom: 8px;
+}
