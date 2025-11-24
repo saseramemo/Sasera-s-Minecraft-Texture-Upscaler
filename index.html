@@ -5,40 +5,269 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecraft Texture Rescaler</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Font F77 Minecraft */
+        @font-face {
+            font-family: 'F77 Minecraft';
+            src: url('assets/fonts/F77Minecraft.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* Mengatur font untuk seluruh dokumen */
+        body {
+            font-family: 'F77 Minecraft', sans-serif;
+            background-color: #f7f9fb;
+            background-image: url('assets/BACKGROUND DIRT.png');
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+        h1, h2, p, label, button, select, div, a {
+            font-family: 'F77 Minecraft', sans-serif;
+        }
+
+        /* Style dasar untuk tombol gambar */
+        .image-button {
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0;
+            padding: 0;
+            transition: background-image 0.1s ease-in-out;
+            aspect-ratio: 910 / 290;
+        }
+
+        /* Ukuran tombol di layar kecil */
+        @media (max-width: 768px) {
+            .image-button {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        /* Status default */
+        #uploadButton { background-image: url('assets/UPLOAD BUTTON.png'); }
+        #rescaleButton { background-image: url('assets/RESCALE BUTTON.png'); }
+        #downloadAllButton { background-image: url('assets/DOWNLOAD BUTTON.png'); }
+        #infoButton { background-image: url('assets/INFO BUTTON.png'); }
+        #closeInfoButton { background-image: url('assets/CLOSE BUTTON.png'); }
+
+        /* Status hover/selected */
+        #uploadButton:hover, #uploadButton.selected { background-image: url('assets/UPLOAD BUTTON SELECTED.png'); }
+        #rescaleButton:hover, #rescaleButton.selected { background-image: url('assets/RESCALE BUTTON SELECTED.png'); }
+        #downloadAllButton:hover, #downloadAllButton.selected { background-image: url('assets/DOWNLOAD BUTTON SELECTED.png'); }
+        #infoButton:hover, #infoButton.selected { background-image: url('assets/INFO BUTTON SELECTED.png'); }
+        #closeInfoButton:hover, #closeInfoButton.selected { background-image: url('assets/CLOSE BUTTON SELECTED.png'); }
+
+        /* Untuk tombol yang disabled */
+        #rescaleButton:disabled, #downloadAllButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Style untuk select yang disabled */
+        select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #4a5568;
+        }
+
+        /* Style untuk modal overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #333;
+            color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 3px solid #666;
+        }
+        .modal-content h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #aaffaa;
+            text-align: center;
+        }
+        .modal-content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .modal-content ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        .modal-content ul li {
+            margin-bottom: 8px;
+        }
+
+        /* Style untuk daftar file */
+        .file-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #4a5568;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #2d3748;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background-color: #4a5568;
+            border-radius: 6px;
+            border-left: 4px solid #68d391;
+        }
+        .file-item:last-child {
+            margin-bottom: 0;
+        }
+        .file-name {
+            flex: 1;
+            color: #e2e8f0;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        .file-size {
+            color: #a0aec0;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .file-remove {
+            background: none;
+            border: none;
+            color: #fc8181;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .file-remove:hover {
+            background-color: #fc8181;
+            color: white;
+        }
+
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            background-color: #4a5568;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #68d391;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a202c;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Grid untuk hasil multiple */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .result-item {
+            background-color: #4a5568;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #68d391;
+        }
+        .result-image {
+            max-width: 100%;
+            max-height: 120px;
+            object-fit: contain;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        .result-info {
+            font-size: 12px;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+        }
+        .result-download {
+            background-color: #68d391;
+            color: #1a202c;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .result-download:hover {
+            background-color: #48bb78;
+        }
+    </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <div class="max-w-4xl mx-auto bg-gray-800 shadow-xl rounded-2xl p-6 md:p-10 border-4 border-gray-600 relative">
+    <div class="max-w-6xl mx-auto bg-gray-800 shadow-xl rounded-2xl p-6 md:p-10 border-4 border-gray-600 relative">
         
         <div class="absolute top-4 right-4 z-10">
             <button id="infoButton" class="image-button w-24 h-[31px]"></button>
         </div>
 
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center mb-8">
             <div class="flex justify-center mb-4">
                 <img src="assets/Icon Sasera.png" alt="Icon Sasera" class="w-24 h-24 sm:w-32 sm:h-32 object-contain">
             </div>
             <h1 class="text-3xl font-extrabold text-lime-400 mb-2 text-center sm:text-4xl">
                 Minecraft Texture Rescaler
             </h1>
+            <p class="text-center text-gray-300 text-lg sm:text-xl max-w-3xl">
+                Unggah satu atau banyak tekstur, pilih skala, dan dapatkan hasil dengan resolusi lebih tinggi atau lebih rendah
+            </p>
         </div>
-        <p class="text-center text-gray-300 mb-8 text-lg sm:text-xl">
-            Unggah tekstur, pilih skala, dan dapatkan hasil dengan resolusi lebih tinggi
-        </p>
 
-        <div class="space-y-6 md:space-y-0 md:flex md:space-x-6 mb-8 items-center justify-center">
-
-            <div class="flex flex-col items-center">
-                <input type="file" id="fileInput" accept="image/*" class="hidden">
-                <button id="uploadButton" class="image-button w-64 h-[82px]"></button>
+        <!-- Grid layout untuk kontrol -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8 items-center">
+            
+            <!-- Upload Button -->
+            <div class="flex flex-col items-center lg:col-span-1">
+                <input type="file" id="fileInput" accept="image/*" multiple class="hidden">
+                <button id="uploadButton" class="image-button w-full max-w-xs h-[82px] mb-2"></button>
+                <span class="text-gray-400 text-sm text-center">Unggah Tekstur (Bisa Banyak)</span>
             </div>
 
-            <div class="flex-grow">
+            <!-- Scale Up Options -->
+            <div class="lg:col-span-1">
                 <label for="resolutionSelect" class="block text-lg font-medium text-gray-200 mb-2 text-center">
-                    Pilih Resolusi Target (Tinggi)
+                    Scale Up - Resolusi Tinggi
                 </label>
-                <select id="resolutionSelect" class="w-full p-3 border border-gray-500 rounded-lg shadow-sm focus:ring-lime-500 focus:border-lime-500 transition duration-150 ease-in-out bg-gray-700 text-white text-base">
+                <select id="resolutionSelect" class="w-full p-3 border border-gray-500 rounded-lg shadow-sm focus:ring-lime-500 focus:border-lime-500 transition duration-150 ease-in-out bg-gray-700 text-white text-base h-12">
                     <option value="720">HD (720p) - Tinggi 720px</option>
                     <option value="1080" selected>FHD (1080p) - Tinggi 1080px</option>
                     <option value="1440">2K / QHD (1440p) - Tinggi 1440px</option>
@@ -46,46 +275,101 @@
                 </select>
             </div>
 
-            <div class="flex flex-col items-center">
-                <button id="rescaleButton" class="image-button w-64 h-[82px]" disabled></button>
+            <!-- Scale Down Options -->
+            <div class="lg:col-span-1">
+                <label for="scaleDownSelect" class="block text-lg font-medium text-gray-200 mb-2 text-center">
+                    Scale Down - Resolusi Kecil
+                </label>
+                <select id="scaleDownSelect" class="w-full p-3 border border-gray-500 rounded-lg shadow-sm focus:ring-lime-500 focus:border-lime-500 transition duration-150 ease-in-out bg-gray-700 text-white text-base h-12">
+                    <option value="" selected>-- Pilih Skala Kecil --</option>
+                    <option value="16">16px (Texture Pack Standar)</option>
+                    <option value="32">32px</option>
+                    <option value="64">64px</option>
+                    <option value="128">128px</option>
+                    <option value="256">256px</option>
+                </select>
+            </div>
+
+            <!-- Process Button -->
+            <div class="flex flex-col items-center lg:col-span-1">
+                <button id="rescaleButton" class="image-button w-full max-w-xs h-[82px] mb-2" disabled></button>
+                <span class="text-gray-400 text-sm text-center">Proses Semua Tekstur</span>
             </div>
         </div>
-        
 
+        <!-- File List -->
+        <div id="fileListContainer" class="mb-6 hidden">
+            <h3 class="text-lg font-medium text-gray-200 mb-2">File yang Diunggah:</h3>
+            <div id="fileList" class="file-list"></div>
+            <div class="flex justify-between items-center mt-2">
+                <span id="fileCount" class="text-gray-400 text-sm"></span>
+                <button id="clearAllButton" class="text-red-400 text-sm hover:text-red-300 transition duration-150">
+                    Hapus Semua
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progressContainer" class="hidden">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-400 text-sm">Progress:</span>
+                <span id="progressText" class="text-gray-400 text-sm">0/0</span>
+            </div>
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar" style="width: 0%">0%</div>
+            </div>
+        </div>
+
+        <!-- Message Area -->
         <div id="messageArea" class="text-center text-sm mb-6 min-h-[20px] text-gray-400"></div>
 
-        <div id="previewArea" class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="text-center p-4 border border-gray-600 rounded-lg bg-gray-700">
-                <h2 class="text-xl font-semibold mb-3 text-gray-200">Tekstur Asli</h2>
-                <div class="flex justify-center items-center h-48 bg-gray-800 rounded-lg mb-2 overflow-hidden">
+        <!-- Download All Button -->
+        <div id="downloadAllContainer" class="flex justify-center mb-6 hidden">
+            <button id="downloadAllButton" class="image-button w-64 h-[82px]" disabled></button>
+        </div>
+
+        <!-- Single Preview Area -->
+        <div id="singlePreviewArea" class="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div class="text-center p-6 border border-gray-600 rounded-lg bg-gray-700">
+                <h2 class="text-xl font-semibold mb-4 text-gray-200">Tekstur Asli</h2>
+                <div class="flex justify-center items-center h-64 bg-gray-800 rounded-lg mb-4 overflow-hidden">
                     <img id="originalImage" src="" alt="Tekstur Asli" class="max-h-full max-w-full object-contain hidden rounded" />
-                    <p id="originalPlaceholder" class="text-gray-500">Belum ada tekstur diunggah.</p>
+                    <p id="originalPlaceholder" class="text-gray-500 px-4">Belum ada tekstur diunggah.</p>
                 </div>
                 <p id="originalDims" class="text-sm text-gray-400"></p>
             </div>
             
-            <div class="text-center p-4 border border-lime-600 rounded-lg bg-lime-900/20">
-                <h2 class="text-xl font-semibold mb-3 text-lime-400">Tekstur Rescale</h2>
-                <div class="flex justify-center items-center h-48 bg-lime-900/30 rounded-lg mb-2 relative overflow-hidden">
-                    <img id="resizedImage" src="" alt="Tekstur Rescale" class="max-h-full max-w-full object-contain hidden rounded" />
-                    <p id="resizedPlaceholder" class="text-lime-500">Hasil akan muncul di sini.</p>
-                    <a id="downloadLink" href="#" download="resized_texture.png" class="image-button absolute bottom-2 right-2 w-20 h-[25px] hidden transition duration-150"></a>
+            <div class="text-center p-6 border border-lime-600 rounded-lg bg-lime-900/20">
+                <h2 class="text-xl font-semibold mb-4 text-lime-400">Tekstur Hasil</h2>
+                <div class="flex justify-center items-center h-64 bg-lime-900/30 rounded-lg mb-4 relative overflow-hidden">
+                    <img id="resizedImage" src="" alt="Tekstur Hasil" class="max-h-full max-w-full object-contain hidden rounded" />
+                    <p id="resizedPlaceholder" class="text-lime-500 px-4">Hasil akan muncul di sini.</p>
+                    <a id="downloadLink" href="#" download="resized_texture.png" class="image-button absolute bottom-4 right-4 w-24 h-[31px] hidden transition duration-150"></a>
                 </div>
                 <p id="resizedDims" class="text-sm text-lime-400 font-medium"></p>
             </div>
         </div>
 
+        <!-- Multiple Results Area -->
+        <div id="multipleResultsArea" class="mt-8 hidden">
+            <h2 class="text-xl font-semibold mb-4 text-lime-400 text-center">Hasil Rescale Semua Tekstur</h2>
+            <div id="resultsGrid" class="results-grid"></div>
+        </div>
+
         <canvas id="hiddenCanvas" class="hidden"></canvas>
     </div>
 
+    <!-- Info Modal -->
     <div id="infoModal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 class="mb-4">Informasi Program</h3>
             <p>Program ini dirancang khusus untuk mengubah skala (rescale) tekstur Minecraft:</p>
             <ul>
+                <li><strong>Upload Multiple:</strong> Kini bisa mengupload banyak tekstur sekaligus dan memprosesnya bersama-sama</li>
                 <li><strong>Metode Penskalaan:</strong> Selalu menggunakan metode *Nearest Neighbor*. Ini berarti piksel-piksel akan diperbesar tanpa dihaluskan, cocok untuk mempertahankan gaya pikselated Minecraft.</li>
                 <li><strong>Rasio Aspek:</strong> Rasio aspek gambar asli akan selalu dipertahankan, menghindari distorsi atau peregangan.</li>
-                <li><strong>Resolusi Target:</strong> Anda dapat memilih resolusi target berdasarkan tinggi (720p, 1080p, 2K, 4K). Lebar akan disesuaikan secara otomatis.</li>
+                <li><strong>Scale Up:</strong> Dapat meningkatkan resolusi ke ukuran tinggi (720p, 1080p, 2K, 4K).</li>
+                <li><strong>Scale Down:</strong> Dapat mengecilkan resolusi ke ukuran Minecraft (16px, 32px, 64px, 128px, 256px).</li>
                 <li><strong>Format Output:</strong> Gambar hasil akan disimpan dalam format PNG untuk kualitas terbaik tanpa kompresi *lossy*.</li>
             </ul>
             <div class="flex justify-center mt-6">
@@ -94,16 +378,19 @@
         </div>
     </div>
 
-
     <script>
-        // Variabel global untuk menyimpan data gambar asli
-        let originalImg = null;
+        // Variabel global
+        let originalImages = [];
+        let processedResults = [];
+        let currentSingleImage = null;
 
         // Mendapatkan elemen DOM
         const fileInput = document.getElementById('fileInput');
         const uploadButton = document.getElementById('uploadButton');
         const rescaleButton = document.getElementById('rescaleButton');
+        const downloadAllButton = document.getElementById('downloadAllButton');
         const resolutionSelect = document.getElementById('resolutionSelect');
+        const scaleDownSelect = document.getElementById('scaleDownSelect');
         const originalImage = document.getElementById('originalImage');
         const resizedImage = document.getElementById('resizedImage');
         const originalPlaceholder = document.getElementById('originalPlaceholder');
@@ -117,110 +404,318 @@
         const infoButton = document.getElementById('infoButton');
         const infoModal = document.getElementById('infoModal');
         const closeInfoButton = document.getElementById('closeInfoButton');
+        const fileListContainer = document.getElementById('fileListContainer');
+        const fileList = document.getElementById('fileList');
+        const fileCount = document.getElementById('fileCount');
+        const clearAllButton = document.getElementById('clearAllButton');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const downloadAllContainer = document.getElementById('downloadAllContainer');
+        const singlePreviewArea = document.getElementById('singlePreviewArea');
+        const multipleResultsArea = document.getElementById('multipleResultsArea');
+        const resultsGrid = document.getElementById('resultsGrid');
         
-        // Atur agar rendering menggunakan metode Nearest Neighbor (tidak ada anti-aliasing)
-        ctx.imageSmoothingEnabled = false; 
+        // Atur agar rendering menggunakan metode Nearest Neighbor
+        ctx.imageSmoothingEnabled = false;
 
-        // Fungsi untuk menampilkan pesan (loading atau error)
+        // Fungsi untuk menampilkan pesan
         function showMessage(text, isError = false) {
             messageArea.textContent = text;
             messageArea.className = `text-center text-sm mb-6 min-h-[20px] ${isError ? 'text-red-400' : 'text-lime-300'}`;
         }
 
+        // Fungsi untuk menampilkan daftar file
+        function updateFileList() {
+            fileList.innerHTML = '';
+            originalImages.forEach((fileData, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span class="file-name">${fileData.file.name}</span>
+                    <span class="file-size">(${formatFileSize(fileData.file.size)})</span>
+                    <button class="file-remove" data-index="${index}">×</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+
+            fileCount.textContent = `${originalImages.length} file terpilih`;
+            fileListContainer.classList.toggle('hidden', originalImages.length === 0);
+            
+            // Tampilkan/sembunyikan tombol proses
+            rescaleButton.disabled = originalImages.length === 0;
+            
+            // Reset hasil multiple
+            if (originalImages.length !== 1) {
+                multipleResultsArea.classList.add('hidden');
+                downloadAllContainer.classList.add('hidden');
+                processedResults = [];
+            }
+        }
+
+        // Fungsi format ukuran file
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Fungsi untuk merescale satu gambar
+        function rescaleSingleImage(img, targetHeight, mode) {
+            const originalWidth = img.width;
+            const originalHeight = img.height;
+            const aspectRatio = originalWidth / originalHeight;
+            const newHeight = targetHeight;
+            const newWidth = Math.round(newHeight * aspectRatio);
+
+            hiddenCanvas.width = newWidth;
+            hiddenCanvas.height = newHeight;
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+            return {
+                dataUrl: hiddenCanvas.toDataURL('image/png'),
+                width: newWidth,
+                height: newHeight,
+                mode: mode
+            };
+        }
+
+        // Event listener untuk select scale down
+        scaleDownSelect.addEventListener('change', () => {
+            if (scaleDownSelect.value) {
+                resolutionSelect.disabled = true;
+            } else {
+                resolutionSelect.disabled = false;
+            }
+        });
+
+        // Event listener untuk resolution select
+        resolutionSelect.addEventListener('change', () => {
+            if (resolutionSelect.value) {
+                scaleDownSelect.disabled = true;
+            } else {
+                scaleDownSelect.disabled = false;
+            }
+        });
+
         // --- Event Listener untuk Upload Foto ---
         uploadButton.addEventListener('click', () => {
-            fileInput.click(); // Memicu klik pada input file tersembunyi
+            fileInput.click();
         });
 
         fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file || !file.type.startsWith('image/')) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            // Filter hanya file gambar
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            if (imageFiles.length === 0) {
                 showMessage('File yang dipilih harus berupa gambar.', true);
-                rescaleButton.disabled = true;
                 return;
             }
 
-            showMessage('Tekstur berhasil diunggah. Siap diproses.', false);
-            rescaleButton.disabled = false;
+            showMessage(`${imageFiles.length} tekstur berhasil diunggah. Siap diproses.`, false);
             
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    originalImg = img;
-                    originalImage.src = e.target.result;
-                    originalImage.classList.remove('hidden');
-                    originalPlaceholder.classList.add('hidden');
-                    originalDims.textContent = `Dimensi Asli: ${img.width} x ${img.height} px`;
+            // Reset select options
+            scaleDownSelect.disabled = false;
+            resolutionSelect.disabled = false;
+            scaleDownSelect.value = "";
 
-                    // Reset hasil
-                    resizedImage.classList.add('hidden');
-                    resizedPlaceholder.classList.remove('hidden');
-                    resizedDims.textContent = '';
-                    downloadLink.classList.add('hidden');
+            // Load semua gambar
+            imageFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        originalImages.push({
+                            file: file,
+                            image: img,
+                            url: e.target.result
+                        });
+                        updateFileList();
+
+                        // Jika hanya satu file, tampilkan preview single
+                        if (originalImages.length === 1) {
+                            currentSingleImage = img;
+                            originalImage.src = e.target.result;
+                            originalImage.classList.remove('hidden');
+                            originalPlaceholder.classList.add('hidden');
+                            originalDims.textContent = `Dimensi Asli: ${img.width} x ${img.height} px`;
+
+                            // Reset hasil single
+                            resizedImage.classList.add('hidden');
+                            resizedPlaceholder.classList.remove('hidden');
+                            resizedDims.textContent = '';
+                            downloadLink.classList.add('hidden');
+                        } else {
+                            // Jika multiple file, sembunyikan single preview
+                            singlePreviewArea.classList.add('hidden');
+                        }
+                    };
+                    img.src = e.target.result;
                 };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+                reader.readAsDataURL(file);
+            });
+
+            fileInput.value = '';
         });
 
+        // Event listener untuk menghapus file individual
+        fileList.addEventListener('click', (event) => {
+            if (event.target.classList.contains('file-remove')) {
+                const index = parseInt(event.target.getAttribute('data-index'));
+                originalImages.splice(index, 1);
+                updateFileList();
+                
+                // Jika tersisa 1 file, tampilkan single preview
+                if (originalImages.length === 1) {
+                    singlePreviewArea.classList.remove('hidden');
+                    const fileData = originalImages[0];
+                    currentSingleImage = fileData.image;
+                    originalImage.src = fileData.url;
+                    originalImage.classList.remove('hidden');
+                    originalDims.textContent = `Dimensi Asli: ${fileData.image.width} x ${fileData.image.height} px`;
+                } else if (originalImages.length === 0) {
+                    singlePreviewArea.classList.remove('hidden');
+                    originalImage.classList.add('hidden');
+                    originalPlaceholder.classList.remove('hidden');
+                    originalDims.textContent = '';
+                }
+            }
+        });
+
+        // Event listener untuk hapus semua
+        clearAllButton.addEventListener('click', () => {
+            originalImages = [];
+            processedResults = [];
+            updateFileList();
+            singlePreviewArea.classList.remove('hidden');
+            multipleResultsArea.classList.add('hidden');
+            downloadAllContainer.classList.add('hidden');
+            originalImage.classList.add('hidden');
+            originalPlaceholder.classList.remove('hidden');
+            originalDims.textContent = '';
+            showMessage('Semua file telah dihapus.', false);
+        });
 
         // --- Event Listener untuk Tombol Rescale ---
-        rescaleButton.addEventListener('click', () => {
-            if (!originalImg) {
+        rescaleButton.addEventListener('click', async () => {
+            if (originalImages.length === 0) {
                 showMessage('Harap unggah tekstur terlebih dahulu.', true);
                 return;
             }
 
-            showMessage('Sedang memproses, harap tunggu...', false);
+            let targetHeight, mode;
+            if (scaleDownSelect.value) {
+                targetHeight = parseInt(scaleDownSelect.value, 10);
+                mode = 'downscale';
+            } else if (resolutionSelect.value) {
+                targetHeight = parseInt(resolutionSelect.value, 10);
+                mode = 'upscale';
+            } else {
+                showMessage('Harap pilih resolusi target atau skala kecil.', true);
+                return;
+            }
+
+            showMessage('Sedang memproses semua tekstur, harap tunggu...', false);
             rescaleButton.disabled = true;
+            progressContainer.classList.remove('hidden');
 
-            const targetHeight = parseInt(resolutionSelect.value, 10);
+            processedResults = [];
+            const totalFiles = originalImages.length;
 
-            // Mendapatkan dimensi asli
-            const originalWidth = originalImg.width;
-            const originalHeight = originalImg.height;
+            // Proses semua gambar
+            for (let i = 0; i < originalImages.length; i++) {
+                const fileData = originalImages[i];
+                const result = rescaleSingleImage(fileData.image, targetHeight, mode);
+                
+                processedResults.push({
+                    originalName: fileData.file.name,
+                    originalWidth: fileData.image.width,
+                    originalHeight: fileData.image.height,
+                    result: result
+                });
 
-            // Menghitung rasio aspek
-            const aspectRatio = originalWidth / originalHeight;
+                // Update progress
+                const progress = ((i + 1) / totalFiles) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressBar.textContent = `${Math.round(progress)}%`;
+                progressText.textContent = `${i + 1}/${totalFiles}`;
 
-            // Menghitung dimensi baru berdasarkan target tinggi
-            const newHeight = targetHeight;
-            const newWidth = Math.round(newHeight * aspectRatio); // Gunakan Math.round untuk memastikan integer
+                // Beri jeda kecil agar UI tidak freeze
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
 
-            // Atur ukuran kanvas
-            hiddenCanvas.width = newWidth;
-            hiddenCanvas.height = newHeight;
-            
-            // Set context untuk Nearest Neighbor (Penting untuk mempertahankan ketajaman pixel)
-            ctx.imageSmoothingEnabled = false; 
+            // Tampilkan hasil
+            if (originalImages.length === 1) {
+                // Tampilkan single preview
+                const result = processedResults[0].result;
+                resizedImage.src = result.dataUrl;
+                resizedImage.classList.remove('hidden');
+                resizedPlaceholder.classList.add('hidden');
+                const modeText = result.mode === 'downscale' ? ' (Scale Down)' : ' (Scale Up)';
+                resizedDims.textContent = `Dimensi Baru: ${result.width} x ${result.height} px${modeText}`;
+                downloadLink.href = result.dataUrl;
+                const modePrefix = result.mode === 'downscale' ? 'scaled_down' : 'rescaled';
+                downloadLink.download = `minecraft_texture_${modePrefix}_${result.height}p.png`;
+                downloadLink.classList.remove('hidden');
+            } else {
+                // Tampilkan multiple results
+                singlePreviewArea.classList.add('hidden');
+                multipleResultsArea.classList.remove('hidden');
+                resultsGrid.innerHTML = '';
 
-            // Gambar ulang foto ke kanvas dengan dimensi baru
-            ctx.drawImage(originalImg, 0, 0, newWidth, newHeight);
+                processedResults.forEach((item, index) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+                    resultItem.innerHTML = `
+                        <img src="${item.result.dataUrl}" alt="Hasil" class="result-image">
+                        <div class="result-info">
+                            ${item.originalName}<br>
+                            ${item.originalWidth}x${item.originalHeight} → ${item.result.width}x${item.result.height}
+                        </div>
+                        <button class="result-download" data-index="${index}">Download</button>
+                    `;
+                    resultsGrid.appendChild(resultItem);
+                });
 
-            // Mengubah konten kanvas menjadi Data URL (PNG)
-            const dataUrl = hiddenCanvas.toDataURL('image/png');
+                // Tampilkan tombol download all
+                downloadAllContainer.classList.remove('hidden');
+                downloadAllButton.disabled = false;
+            }
 
-            // Menampilkan hasil
-            resizedImage.src = dataUrl;
-            resizedImage.classList.remove('hidden');
-            resizedPlaceholder.classList.add('hidden');
-            resizedDims.textContent = `Dimensi Baru: ${newWidth} x ${newHeight} px`;
-
-            // Mengaktifkan link download
-            downloadLink.href = dataUrl;
-            downloadLink.download = `minecraft_texture_${newHeight}p.png`;
-            downloadLink.classList.remove('hidden');
-
-            showMessage('Pemrosesan selesai!', false);
+            showMessage(`Pemrosesan selesai! ${processedResults.length} tekstur berhasil direscale.`, false);
             rescaleButton.disabled = false;
+            progressContainer.classList.add('hidden');
         });
 
-        // Event listener untuk memastikan tombol Rescale aktif/nonaktif saat resolusi berubah
-        resolutionSelect.addEventListener('change', () => {
-            if (originalImg) {
-                rescaleButton.disabled = false;
+        // Event listener untuk download individual dari multiple results
+        resultsGrid.addEventListener('click', (event) => {
+            if (event.target.classList.contains('result-download')) {
+                const index = parseInt(event.target.getAttribute('data-index'));
+                const item = processedResults[index];
+                const link = document.createElement('a');
+                link.href = item.result.dataUrl;
+                const modePrefix = item.result.mode === 'downscale' ? 'scaled_down' : 'rescaled';
+                const originalNameWithoutExt = item.originalName.replace(/\.[^/.]+$/, "");
+                link.download = `${originalNameWithoutExt}_${modePrefix}_${item.result.height}p.png`;
+                link.click();
             }
+        });
+
+        // Event listener untuk download all
+        downloadAllButton.addEventListener('click', () => {
+            processedResults.forEach(item => {
+                const link = document.createElement('a');
+                link.href = item.result.dataUrl;
+                const modePrefix = item.result.mode === 'downscale' ? 'scaled_down' : 'rescaled';
+                const originalNameWithoutExt = item.originalName.replace(/\.[^/.]+$/, "");
+                link.download = `${originalNameWithoutExt}_${modePrefix}_${item.result.height}p.png`;
+                link.click();
+            });
         });
 
         // --- Event Listener untuk Tombol Info ---
@@ -228,13 +723,11 @@
             infoModal.classList.remove('hidden');
         });
 
-        // Perbaikan Bug: Menutup modal dengan event preventDefault
         closeInfoButton.addEventListener('click', (event) => {
             event.preventDefault(); 
             infoModal.classList.add('hidden');
         });
 
-        // Perbaikan Bug: Menutup modal dengan mengklik overlay
         infoModal.addEventListener('click', (event) => {
             if (event.target === infoModal) {
                 infoModal.classList.add('hidden');
@@ -242,17 +735,19 @@
         });
 
         // Event listener untuk tombol (agar ada efek selected saat di-klik)
-        const buttons = [uploadButton, rescaleButton, infoButton, closeInfoButton, downloadLink];
+        const buttons = [uploadButton, rescaleButton, downloadAllButton, infoButton, closeInfoButton, downloadLink];
         buttons.forEach(button => {
-            button.addEventListener('mousedown', () => {
-                button.classList.add('selected');
-            });
-            button.addEventListener('mouseup', () => {
-                button.classList.remove('selected');
-            });
-            button.addEventListener('mouseleave', () => {
-                button.classList.remove('selected');
-            });
+            if (button) {
+                button.addEventListener('mousedown', () => {
+                    button.classList.add('selected');
+                });
+                button.addEventListener('mouseup', () => {
+                    button.classList.remove('selected');
+                });
+                button.addEventListener('mouseleave', () => {
+                    button.classList.remove('selected');
+                });
+            }
         });
     </script>
 </body>
