@@ -56,6 +56,7 @@
         #uploadButton { background-image: url('assets/UPLOAD BUTTON.png'); }
         #rescaleButton { background-image: url('assets/RESCALE BUTTON.png'); }
         #downloadAllButton { background-image: url('assets/DOWNLOAD BUTTON.png'); }
+        #downloadSingleButton { background-image: url('assets/DOWNLOAD BUTTON.png'); }
         #infoButton { background-image: url('assets/INFO BUTTON.png'); }
         #closeInfoButton { background-image: url('assets/CLOSE BUTTON.png'); }
 
@@ -63,6 +64,7 @@
         #uploadButton:hover, #uploadButton.selected { background-image: url('assets/UPLOAD BUTTON SELECTED.png'); }
         #rescaleButton:hover, #rescaleButton.selected { background-image: url('assets/RESCALE BUTTON SELECTED.png'); }
         #downloadAllButton:hover, #downloadAllButton.selected { background-image: url('assets/DOWNLOAD BUTTON SELECTED.png'); }
+        #downloadSingleButton:hover, #downloadSingleButton.selected { background-image: url('assets/DOWNLOAD BUTTON SELECTED.png'); }
         #infoButton:hover, #infoButton.selected { background-image: url('assets/INFO BUTTON SELECTED.png'); }
         #closeInfoButton:hover, #closeInfoButton.selected { background-image: url('assets/CLOSE BUTTON SELECTED.png'); }
 
@@ -77,6 +79,23 @@
             opacity: 0.5;
             cursor: not-allowed;
             background-color: #4a5568;
+        }
+
+        /* Style untuk tombol reset pilihan */
+        .reset-selection {
+            background: none;
+            border: none;
+            color: #fc8181;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #fc8181;
+        }
+        .reset-selection:hover {
+            background-color: #fc8181;
+            color: white;
         }
 
         /* Style untuk modal overlay */
@@ -268,11 +287,15 @@
                     Scale Up - Resolusi Tinggi
                 </label>
                 <select id="resolutionSelect" class="w-full p-3 border border-gray-500 rounded-lg shadow-sm focus:ring-lime-500 focus:border-lime-500 transition duration-150 ease-in-out bg-gray-700 text-white text-base h-12">
+                    <option value="">-- Pilih Scale Up --</option>
                     <option value="720">HD (720p) - Tinggi 720px</option>
-                    <option value="1080" selected>FHD (1080p) - Tinggi 1080px</option>
+                    <option value="1080">FHD (1080p) - Tinggi 1080px</option>
                     <option value="1440">2K / QHD (1440p) - Tinggi 1440px</option>
                     <option value="2160">4K / UHD (2160p) - Tinggi 2160px</option>
                 </select>
+                <div class="flex justify-center">
+                    <button id="resetScaleUp" class="reset-selection hidden">Reset Pilihan</button>
+                </div>
             </div>
 
             <!-- Scale Down Options -->
@@ -281,13 +304,16 @@
                     Scale Down - Resolusi Kecil
                 </label>
                 <select id="scaleDownSelect" class="w-full p-3 border border-gray-500 rounded-lg shadow-sm focus:ring-lime-500 focus:border-lime-500 transition duration-150 ease-in-out bg-gray-700 text-white text-base h-12">
-                    <option value="" selected>-- Pilih Skala Kecil --</option>
+                    <option value="" selected>-- Pilih Scale Down --</option>
                     <option value="16">16px (Texture Pack Standar)</option>
                     <option value="32">32px</option>
                     <option value="64">64px</option>
                     <option value="128">128px</option>
                     <option value="256">256px</option>
                 </select>
+                <div class="flex justify-center">
+                    <button id="resetScaleDown" class="reset-selection hidden">Reset Pilihan</button>
+                </div>
             </div>
 
             <!-- Process Button -->
@@ -344,7 +370,8 @@
                 <div class="flex justify-center items-center h-64 bg-lime-900/30 rounded-lg mb-4 relative overflow-hidden">
                     <img id="resizedImage" src="" alt="Tekstur Hasil" class="max-h-full max-w-full object-contain hidden rounded" />
                     <p id="resizedPlaceholder" class="text-lime-500 px-4">Hasil akan muncul di sini.</p>
-                    <a id="downloadLink" href="#" download="resized_texture.png" class="image-button absolute bottom-4 right-4 w-24 h-[31px] hidden transition duration-150"></a>
+                    <!-- TOMBOL DOWNLOAD SINGLE YANG DIPERBAIKI -->
+                    <button id="downloadSingleButton" class="image-button absolute bottom-4 right-4 w-24 h-[31px] hidden transition duration-150"></button>
                 </div>
                 <p id="resizedDims" class="text-sm text-lime-400 font-medium"></p>
             </div>
@@ -366,6 +393,7 @@
             <p>Program ini dirancang khusus untuk mengubah skala (rescale) tekstur Minecraft:</p>
             <ul>
                 <li><strong>Upload Multiple:</strong> Kini bisa mengupload banyak tekstur sekaligus dan memprosesnya bersama-sama</li>
+                <li><strong>Sistem Pilihan Fleksibel:</strong> Bisa berganti antara Scale Up dan Scale Down kapan saja dengan tombol reset</li>
                 <li><strong>Metode Penskalaan:</strong> Selalu menggunakan metode *Nearest Neighbor*. Ini berarti piksel-piksel akan diperbesar tanpa dihaluskan, cocok untuk mempertahankan gaya pikselated Minecraft.</li>
                 <li><strong>Rasio Aspek:</strong> Rasio aspek gambar asli akan selalu dipertahankan, menghindari distorsi atau peregangan.</li>
                 <li><strong>Scale Up:</strong> Dapat meningkatkan resolusi ke ukuran tinggi (720p, 1080p, 2K, 4K).</li>
@@ -383,21 +411,24 @@
         let originalImages = [];
         let processedResults = [];
         let currentSingleImage = null;
+        let currentSingleResult = null;
 
         // Mendapatkan elemen DOM
         const fileInput = document.getElementById('fileInput');
         const uploadButton = document.getElementById('uploadButton');
         const rescaleButton = document.getElementById('rescaleButton');
         const downloadAllButton = document.getElementById('downloadAllButton');
+        const downloadSingleButton = document.getElementById('downloadSingleButton');
         const resolutionSelect = document.getElementById('resolutionSelect');
         const scaleDownSelect = document.getElementById('scaleDownSelect');
+        const resetScaleUp = document.getElementById('resetScaleUp');
+        const resetScaleDown = document.getElementById('resetScaleDown');
         const originalImage = document.getElementById('originalImage');
         const resizedImage = document.getElementById('resizedImage');
         const originalPlaceholder = document.getElementById('originalPlaceholder');
         const resizedPlaceholder = document.getElementById('resizedPlaceholder');
         const originalDims = document.getElementById('originalDims');
         const resizedDims = document.getElementById('resizedDims');
-        const downloadLink = document.getElementById('downloadLink');
         const messageArea = document.getElementById('messageArea');
         const hiddenCanvas = document.getElementById('hiddenCanvas');
         const ctx = hiddenCanvas.getContext('2d');
@@ -425,6 +456,41 @@
             messageArea.className = `text-center text-sm mb-6 min-h-[20px] ${isError ? 'text-red-400' : 'text-lime-300'}`;
         }
 
+        // Fungsi untuk update status select boxes
+        function updateSelectStates() {
+            const hasScaleUp = resolutionSelect.value !== "";
+            const hasScaleDown = scaleDownSelect.value !== "";
+
+            // Jika salah satu dipilih, nonaktifkan yang lain
+            if (hasScaleUp || hasScaleDown) {
+                resolutionSelect.disabled = hasScaleDown;
+                scaleDownSelect.disabled = hasScaleUp;
+            } else {
+                // Jika tidak ada yang dipilih, aktifkan keduanya
+                resolutionSelect.disabled = false;
+                scaleDownSelect.disabled = false;
+            }
+
+            // Tampilkan/sembunyikan tombol reset
+            resetScaleUp.classList.toggle('hidden', !hasScaleUp);
+            resetScaleDown.classList.toggle('hidden', !hasScaleDown);
+
+            // Aktifkan tombol proses jika ada file dan salah satu select dipilih
+            rescaleButton.disabled = originalImages.length === 0 || (!hasScaleUp && !hasScaleDown);
+        }
+
+        // Fungsi untuk reset pilihan scale up
+        function resetScaleUpSelection() {
+            resolutionSelect.value = "";
+            updateSelectStates();
+        }
+
+        // Fungsi untuk reset pilihan scale down
+        function resetScaleDownSelection() {
+            scaleDownSelect.value = "";
+            updateSelectStates();
+        }
+
         // Fungsi untuk menampilkan daftar file
         function updateFileList() {
             fileList.innerHTML = '';
@@ -442,8 +508,8 @@
             fileCount.textContent = `${originalImages.length} file terpilih`;
             fileListContainer.classList.toggle('hidden', originalImages.length === 0);
             
-            // Tampilkan/sembunyikan tombol proses
-            rescaleButton.disabled = originalImages.length === 0;
+            // Update status tombol proses
+            updateSelectStates();
             
             // Reset hasil multiple
             if (originalImages.length !== 1) {
@@ -484,22 +550,14 @@
         }
 
         // Event listener untuk select scale down
-        scaleDownSelect.addEventListener('change', () => {
-            if (scaleDownSelect.value) {
-                resolutionSelect.disabled = true;
-            } else {
-                resolutionSelect.disabled = false;
-            }
-        });
+        scaleDownSelect.addEventListener('change', updateSelectStates);
 
         // Event listener untuk resolution select
-        resolutionSelect.addEventListener('change', () => {
-            if (resolutionSelect.value) {
-                scaleDownSelect.disabled = true;
-            } else {
-                scaleDownSelect.disabled = false;
-            }
-        });
+        resolutionSelect.addEventListener('change', updateSelectStates);
+
+        // Event listener untuk tombol reset
+        resetScaleUp.addEventListener('click', resetScaleUpSelection);
+        resetScaleDown.addEventListener('click', resetScaleDownSelection);
 
         // --- Event Listener untuk Upload Foto ---
         uploadButton.addEventListener('click', () => {
@@ -518,11 +576,6 @@
             }
 
             showMessage(`${imageFiles.length} tekstur berhasil diunggah. Siap diproses.`, false);
-            
-            // Reset select options
-            scaleDownSelect.disabled = false;
-            resolutionSelect.disabled = false;
-            scaleDownSelect.value = "";
 
             // Load semua gambar
             imageFiles.forEach(file => {
@@ -549,7 +602,7 @@
                             resizedImage.classList.add('hidden');
                             resizedPlaceholder.classList.remove('hidden');
                             resizedDims.textContent = '';
-                            downloadLink.classList.add('hidden');
+                            downloadSingleButton.classList.add('hidden');
                         } else {
                             // Jika multiple file, sembunyikan single preview
                             singlePreviewArea.classList.add('hidden');
@@ -583,6 +636,9 @@
                     originalImage.classList.add('hidden');
                     originalPlaceholder.classList.remove('hidden');
                     originalDims.textContent = '';
+                    resizedImage.classList.add('hidden');
+                    resizedPlaceholder.classList.remove('hidden');
+                    downloadSingleButton.classList.add('hidden');
                 }
             }
         });
@@ -591,6 +647,7 @@
         clearAllButton.addEventListener('click', () => {
             originalImages = [];
             processedResults = [];
+            currentSingleResult = null;
             updateFileList();
             singlePreviewArea.classList.remove('hidden');
             multipleResultsArea.classList.add('hidden');
@@ -598,6 +655,9 @@
             originalImage.classList.add('hidden');
             originalPlaceholder.classList.remove('hidden');
             originalDims.textContent = '';
+            resizedImage.classList.add('hidden');
+            resizedPlaceholder.classList.remove('hidden');
+            downloadSingleButton.classList.add('hidden');
             showMessage('Semua file telah dihapus.', false);
         });
 
@@ -652,16 +712,15 @@
             // Tampilkan hasil
             if (originalImages.length === 1) {
                 // Tampilkan single preview
-                const result = processedResults[0].result;
-                resizedImage.src = result.dataUrl;
+                currentSingleResult = processedResults[0].result;
+                resizedImage.src = currentSingleResult.dataUrl;
                 resizedImage.classList.remove('hidden');
                 resizedPlaceholder.classList.add('hidden');
-                const modeText = result.mode === 'downscale' ? ' (Scale Down)' : ' (Scale Up)';
-                resizedDims.textContent = `Dimensi Baru: ${result.width} x ${result.height} px${modeText}`;
-                downloadLink.href = result.dataUrl;
-                const modePrefix = result.mode === 'downscale' ? 'scaled_down' : 'rescaled';
-                downloadLink.download = `minecraft_texture_${modePrefix}_${result.height}p.png`;
-                downloadLink.classList.remove('hidden');
+                const modeText = currentSingleResult.mode === 'downscale' ? ' (Scale Down)' : ' (Scale Up)';
+                resizedDims.textContent = `Dimensi Baru: ${currentSingleResult.width} x ${currentSingleResult.height} px${modeText}`;
+                
+                // Tampilkan tombol download single
+                downloadSingleButton.classList.remove('hidden');
             } else {
                 // Tampilkan multiple results
                 singlePreviewArea.classList.add('hidden');
@@ -690,6 +749,19 @@
             showMessage(`Pemrosesan selesai! ${processedResults.length} tekstur berhasil direscale.`, false);
             rescaleButton.disabled = false;
             progressContainer.classList.add('hidden');
+        });
+
+        // Event listener untuk download single (tombol dengan aset)
+        downloadSingleButton.addEventListener('click', () => {
+            if (currentSingleResult) {
+                const link = document.createElement('a');
+                link.href = currentSingleResult.dataUrl;
+                const modePrefix = currentSingleResult.mode === 'downscale' ? 'scaled_down' : 'rescaled';
+                const originalName = originalImages[0]?.file.name || 'texture';
+                const originalNameWithoutExt = originalName.replace(/\.[^/.]+$/, "");
+                link.download = `${originalNameWithoutExt}_${modePrefix}_${currentSingleResult.height}p.png`;
+                link.click();
+            }
         });
 
         // Event listener untuk download individual dari multiple results
@@ -735,7 +807,7 @@
         });
 
         // Event listener untuk tombol (agar ada efek selected saat di-klik)
-        const buttons = [uploadButton, rescaleButton, downloadAllButton, infoButton, closeInfoButton, downloadLink];
+        const buttons = [uploadButton, rescaleButton, downloadAllButton, downloadSingleButton, infoButton, closeInfoButton];
         buttons.forEach(button => {
             if (button) {
                 button.addEventListener('mousedown', () => {
@@ -749,7 +821,9 @@
                 });
             }
         });
+
+        // Inisialisasi awal
+        updateSelectStates();
     </script>
 </body>
 </html>
-
